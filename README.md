@@ -27,7 +27,12 @@ Then ask Claude, for example: *"make me a map video about economics in the Domai
 | `skills/map-explainer-video/references/` | A style study of Domain of Science map videos, and the script-writing pattern |
 | `skills/map-explainer-video/engine/` | The map renderer (browser page + parallel frame capture + ffmpeg), the narration TTS, and the optional music bed |
 | `skills/map-explainer-video/icon_library/` | About 70 starter cartoon icons, plus a contact sheet page to browse them |
-| `examples/map-of-marketing/` | A complete project: the narration script and map layout of "The Map of Marketing" (10:47) |
+| `examples/map-of-marketing/` | "The Map of Marketing" (10:47): a broad field drawn as territories on a world map |
+| `examples/bootstrapping-journey/` | "The Map of Bootstrapping" (7:53): a process drawn as a road trip, with a swamp, a roundabout, a mountain pass and two destinations |
+
+The two examples show the idea: the style stays the same, and the structure is invented for each subject.
+
+![The Map of Bootstrapping: a journey map](docs/bootstrapping-journey-overview.png)
 
 ## Requirements
 
