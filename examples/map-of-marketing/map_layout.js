@@ -1,8 +1,22 @@
 /* map_layout.js: world map regions and items (world units, 6400 x 3600).
  * Items: type "icon" {icon, label, sub, s}; type "label" {text, style, fill, sub, size};
  * type "note" {text}; type "circle" {r, fill}; type "cloudtext" {text, size, plain}.
+ * intro: cold-open scene {bg, items}; items use screen coords (1920 x 1080).
  */
 window.LAYOUT = {
+  intro: {
+    bg: '#17a2a8',
+    items: [
+      { id: 'i_person', type: 'icon', x: 960, y: 700, s: 1.6, icon: 'person_sofa', until: 'i_iceberg' },
+      { id: 'i_tv', type: 'icon', x: 520, y: 620, s: 1.3, icon: 'tv_ad', until: 'i_iceberg' },
+      { id: 'i_billboard', type: 'icon', x: 1420, y: 300, s: 1.4, icon: 'billboard', until: 'i_iceberg' },
+      { id: 'i_jingle', type: 'icon', x: 620, y: 300, s: 1.1, icon: 'music_notes', until: 'i_iceberg' },
+      { id: 'i_phone', type: 'icon', x: 1400, y: 720, s: 1.2, icon: 'phone_ad', until: 'i_iceberg' },
+      { id: 'i_iceberg', type: 'icon', x: 960, y: 560, s: 3.6, icon: 'iceberg', until: 'i_title' },
+      { id: 'i_title', type: 'title', x: 960, y: 540, rot: -2,
+        lines: [{ text: 'THE MAP OF', fs: 70, y0: -95 }, { text: 'MARKETING', fs: 170, y0: 45, stroke: 2 }] }
+    ]
+  },
   regions: {
     strategy: { color: '#b58ad6', points: [[0, 0], [2550, 0], [2620, 500], [2600, 950], [2350, 1500], [1700, 1950], [900, 1940], [0, 2000]] },
     brand:    { color: '#f2a1b8', points: [[2550, 0], [4250, 0], [4150, 650], [3700, 1150], [3050, 1100], [2600, 950], [2620, 500]] },

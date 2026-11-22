@@ -2,6 +2,8 @@
  * Uses window.SCRIPT, window.TIMING, window.ICONS, window.LAYOUT when present.
  * LAYOUT.world = {w, h} sets the world size (default 6400 x 3600).
  * LAYOUT.credit sets the on-screen credit text (the credit itself is always shown).
+ * LAYOUT.intro = {bg, items} sets the cold-open scene: a CSS colour and items in
+ * 1920 x 1080 screen coords, same item schema as LAYOUT.items. Missing = empty, teal.
  */
 (function () {
   'use strict';
@@ -15,7 +17,6 @@
   var AUTHOR_H = 3600;
   var SX = 1;
   var SY = 1;
-  var INTRO_BG = '#17a2a8';
   var TITLE_FILL = '#f7d117';
   var REGION_FADE = 0.8;
   var POP_DUR = 0.45;
@@ -32,17 +33,9 @@
     box:      { fs: 34, fill: '#ffffff', stroke: 4, px: 14, py: 6, tfill: '#111', tstroke: null, tsw: 0 }
   };
 
-  // Intro layer, in screen coordinates (1920 x 1080).
-  var INTRO_ITEMS = [
-    { id: 'i_person', type: 'icon', x: 960, y: 700, s: 1.6, icon: 'person_sofa', until: 'i_iceberg' },
-    { id: 'i_tv', type: 'icon', x: 520, y: 620, s: 1.3, icon: 'tv_ad', until: 'i_iceberg' },
-    { id: 'i_billboard', type: 'icon', x: 1420, y: 300, s: 1.4, icon: 'billboard', until: 'i_iceberg' },
-    { id: 'i_jingle', type: 'icon', x: 620, y: 300, s: 1.1, icon: 'music_notes', until: 'i_iceberg' },
-    { id: 'i_phone', type: 'icon', x: 1400, y: 720, s: 1.2, icon: 'phone_ad', until: 'i_iceberg' },
-    { id: 'i_iceberg', type: 'icon', x: 960, y: 560, s: 3.6, icon: 'iceberg', until: 'i_title' },
-    { id: 'i_title', type: 'title', x: 960, y: 540, rot: -2,
-      lines: [{ text: 'THE MAP OF', fs: 70, y0: -95 }, { text: 'MARKETING', fs: 170, y0: 45, stroke: 2 }] }
-  ];
+  // Intro layer comes from LAYOUT.intro (see readIntro). Screen coordinates, 1920 x 1080.
+  var INTRO_BG_DEFAULT = '#17a2a8';
+  var TITLE_PAD_X = 60;
 
   var state = {
     built: false,
@@ -304,16 +297,19 @@
         var rect = el('rect', { rx: 6, ry: 6, stroke: '#000', 'stroke-width': 9, fill: TITLE_FILL }, inner);
         var tg = el('g', {}, inner);
         var tl = (item.lines || []);
+        // Widest line sets the box width. Each line is measured on its own.
+        var maxLineW = 0;
         for (var i = 0; i < tl.length; i++) {
-          makeText(tg, tl[i].text, { fs: tl[i].fs, fill: '#000', y0: tl[i].y0,
+          var lt = makeText(tg, tl[i].text, { fs: tl[i].fs, fill: '#000', y0: tl[i].y0,
             stroke: tl[i].stroke ? '#000' : null, sw: tl[i].stroke || 0 });
+          maxLineW = Math.max(maxLineW, lt.getBBox().width);
         }
         var bb = tg.getBBox();
         tg.setAttribute('transform', 'translate(' + (-(bb.x + bb.width / 2)) + ',' +
           (-(bb.y + bb.height / 2)) + ')');
-        rect.setAttribute('x', -bb.width / 2 - 60);
+        rect.setAttribute('x', -maxLineW / 2 - TITLE_PAD_X);
         rect.setAttribute('y', -bb.height / 2 - 40);
-        rect.setAttribute('width', bb.width + 120);
+        rect.setAttribute('width', maxLineW + 2 * TITLE_PAD_X);
         rect.setAttribute('height', bb.height + 80);
         inner.setAttribute('transform', 'rotate(' + (item.rot || 0) + ')');
         break;
@@ -572,6 +568,15 @@
     el('feDisplacementMap', { in: 'SourceGraphic', in2: 'n', scale: '4', xChannelSelector: 'R', yChannelSelector: 'G' }, f);
   }
 
+  // Reads LAYOUT.intro. Missing or partial values fall back to an empty teal intro.
+  function readIntro(L) {
+    var src = (L && L.intro && typeof L.intro === 'object') ? L.intro : {};
+    return {
+      bg: (typeof src.bg === 'string' && src.bg.trim()) ? src.bg.trim() : INTRO_BG_DEFAULT,
+      items: Array.isArray(src.items) ? src.items : []
+    };
+  }
+
   function buildAll() {
     var SCRIPT = Array.isArray(window.SCRIPT) ? window.SCRIPT : [];
     var TIM = (window.TIMING && Array.isArray(window.TIMING.segments) && window.TIMING.segments.length)
@@ -616,9 +621,10 @@
     }
 
     // Items index for camera framing.
+    var intro = readIntro(L);
     var byId = {};
     (L.items || []).forEach(function (it) { byId[it.id] = it; });
-    INTRO_ITEMS.forEach(function (it) { byId[it.id] = it; });
+    intro.items.forEach(function (it) { byId[it.id] = it; });
 
     // World layers: regions first, then items.
     var regionLayer = el('g', { id: 'regions' }, state.world);
@@ -633,9 +639,9 @@
     });
 
     // Intro layer: background then items.
-    el('rect', { x: 0, y: 0, width: 1920, height: 1080, fill: INTRO_BG }, state.introSvg);
+    el('rect', { x: 0, y: 0, width: 1920, height: 1080, fill: intro.bg }, state.introSvg);
     var introLayer = el('g', { id: 'intro' }, state.introSvg);
-    INTRO_ITEMS.forEach(function (item) {
+    intro.items.forEach(function (item) {
       addItem(introLayer, item, 'wobble-intro', state.items);
     });
 
