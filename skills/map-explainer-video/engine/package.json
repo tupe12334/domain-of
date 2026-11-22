@@ -1,0 +1,10 @@
+{
+  "name": "map-explainer-video-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Renderer for map explainer videos.",
+  "license": "MIT",
+  "dependencies": {
+    "playwright-core": "^1.65.1"
+  }
+}

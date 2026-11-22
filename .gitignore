@@ -1,0 +1,9 @@
+node_modules/
+__pycache__/
+*.wav
+*.mp4
+out/
+frames/
+data.js
+timing.json
+.map_stage.generated.html

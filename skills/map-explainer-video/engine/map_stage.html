@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Map explainer stage</title>
+<style>
+  @font-face { font-family: Hand; src: url("__FONT_URL__"); }
+  html, body { margin: 0; background: #23222b; }
+  body { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+  #stage, #introsvg, #creditsvg { position: absolute; left: 0; top: 0; }
+  #introsvg, #creditsvg { pointer-events: none; }
+</style>
+</head>
+<body>
+<svg id="stage" width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg"></svg>
+<svg id="introsvg" width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg"></svg>
+<!-- Screen-space overlay above the intro. The camera never moves it. -->
+<svg id="creditsvg" width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg"></svg>
+
+<!-- video_renderer.js replaces this marker with the project scripts, then map_engine.js. -->
+<!--SCRIPTS-->
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Icon contact sheet</title>
+<style>
+  @font-face { font-family: Hand; src: url("../engine/fonts/PatrickHandSC-Regular.ttf"); }
+  body { margin: 0; padding: 16px; background: #cfe8d8; font-family: Hand, sans-serif; color: #111; }
+  h1 { font-size: 28px; margin: 0 0 12px; font-weight: normal; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, 240px); }
+  .cell { width: 240px; height: 260px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
+  .cell svg { width: 240px; height: 240px; overflow: visible; }
+  .cap { font-size: 20px; line-height: 20px; text-align: center; }
+</style>
+</head>
+<body>
+<h1 id="count"></h1>
+<div class="grid" id="grid"></div>
+<script src="starter_icons_a.js"></script>
+<script src="starter_icons_b.js"></script>
+<script>
+  (function () {
+    var grid = document.getElementById('grid');
+    var names = Object.keys(window.ICONS).sort();
+    document.getElementById('count').textContent = names.length + ' starter icons';
+    names.forEach(function (name) {
+      var cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.innerHTML =
+        '<svg viewBox="-120 -120 240 240" xmlns="http://www.w3.org/2000/svg">' +
+        window.ICONS[name]({}) +
+        '</svg><div class="cap">' + name + '</div>';
+      grid.appendChild(cell);
+    });
+  })();
+</script>
+</body>
+</html>
