@@ -503,10 +503,10 @@
 
   var CREDIT_DEFAULT = 'STYLE INSPIRED BY DOMAIN OF SCIENCE · YOUTUBE.COM/@DOMAINOFSCIENCE';
   var CREDIT_STYLE_TAG = ' · STYLE: DOMAIN OF SCIENCE';
-  var CREDIT_FS = 26;
-  var CREDIT_PADX = 10;
-  var CREDIT_PADY = 4;
-  var CREDIT_MARGIN = 24;
+  var CREDIT_FS = 18;
+  var CREDIT_PADX = 8;
+  var CREDIT_PADY = 3;
+  var CREDIT_MARGIN = 12;
   var CREDIT_INTRO_HOLD = 6;   // seconds of intro with the credit fully shown
   var CREDIT_FADE = 0.8;
 
@@ -517,26 +517,27 @@
     return s;
   }
 
-  // Screen-space box, bottom left. Lives in the overlay svg, so the camera does not move it.
+  // Screen-space box, bottom right, right-aligned. Lives in the overlay svg, so the camera does not move it.
   function buildCredit(svg, L) {
     // Not display:none here: getBBox returns zero inside a hidden subtree.
     var g = el('g', { id: 'credit', opacity: 0 }, svg);
     var rect = el('rect', { rx: 8, ry: 8, fill: '#ffffff', opacity: 0.85 }, g);
     var t = el('text', {
       'dominant-baseline': 'central', fill: '#111',
+      'text-anchor': 'end',
       style: 'font-family:Hand;font-size:' + CREDIT_FS + 'px'
     }, g);
     t.textContent = creditText(L);
     var bb = t.getBBox();
     var w = bb.width + 2 * CREDIT_PADX;
     var h = bb.height + 2 * CREDIT_PADY;
-    var x0 = CREDIT_MARGIN;
+    var x0 = 1920 - CREDIT_MARGIN - w;
     var y0 = 1080 - CREDIT_MARGIN - h;
     rect.setAttribute('x', x0);
     rect.setAttribute('y', y0);
     rect.setAttribute('width', w);
     rect.setAttribute('height', h);
-    t.setAttribute('x', x0 + CREDIT_PADX);
+    t.setAttribute('x', x0 + w - CREDIT_PADX);
     t.setAttribute('y', y0 + h / 2);
     state.credit = g;
   }

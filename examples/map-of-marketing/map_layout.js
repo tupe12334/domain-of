@@ -117,6 +117,6 @@ window.LAYOUT = {
     { id: 'e_ai', type: 'icon', x: 6110, y: 390, icon: 'mini_robot', label: 'AI-MADE ADS', s: 0.45 },
 
     // OUTRO
-    { id: 'sig', type: 'cloudtext', x: 5650, y: 3470, text: 'THE MAP OF MARKETING · 2026', size: 44, plain: true }
+    { id: 'sig', type: 'cloudtext', x: 5960, y: 3330, text: 'THE MAP OF MARKETING · 2026', size: 36, plain: true }
   ]
 };
