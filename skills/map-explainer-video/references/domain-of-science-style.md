@@ -29,7 +29,9 @@ Source: a study of four videos by Dominic Walliman (Domain of Science, youtube.c
 - Wonder at crossovers: "this kind of thing has happened so many times… which is amazing I think."
 - About 150 words per minute. A map video runs 8–11 minutes and covers about 1,400–1,900 words.
 
-## Structure (seen in every map video)
+## His usual structure (for reference, not a template)
+
+His "Map of X" videos about broad fields mostly follow this order. Learn from it, but do not copy it into every video: a subject with a different shape (a journey, a stack, a tree) needs a different structure. What carries over is the style and the teaching moves, not this sequence.
 
 1. **Hook:** what we learn at school is one corner of a huge field.
 2. **Origins:** a fast run through history, in the centre of the map.

@@ -18,21 +18,38 @@ Read `references/domain-of-science-style.md` before you write anything. It recor
 One video of 8–12 minutes, made of:
 
 1. **A narration script.** Segments of one or two sentences in a calm, curious first-person voice. Each segment names the map items it reveals and the word that cues each one.
-2. **A map layout.** A wide world, 16:9, with coloured territories. Each main branch of the field is one territory. Foundations sit as bedrock under the map, open problems sit at the edges, and philosophy or ethics floats above as a cloud. Every item has a position, a cartoon icon, an all-caps label and an optional one-line sub-label.
+2. **A map layout whose shape comes from the subject.** A wide world, 16:9, drawn as one picture. The structure is the most important creative choice, and every video gets a fresh one. Every item has a position, a cartoon icon, an all-caps label and an optional one-line sub-label.
 3. **Icons.** Chunky cartoon doodles with thick black outlines and flat bright fills. The starter library covers many common ideas. Draw new ones only for ideas it does not cover.
 4. **Narration audio.** A local neural TTS voice. Each segment is its own clip, and the clip lengths drive all the timing.
 5. **The render.** A browser page draws the map. The camera glides between targets, each item pops in on its cue word, and regions fade in their colour when the narrator first names them. Parallel workers capture the frames, and ffmpeg joins them with the audio and an optional quiet music bed.
 
 The bundled `engine/` does parts 4 and 5. `examples/map-of-marketing/` is a complete, tested project to copy from. Its script and layout show every feature in use.
 
+## Style is fixed, structure is not
+
+Keep the *style* in every video: hand-drawn doodles, thick outlines, flat colours, a camera that tours one big picture, items that pop in on their cue word, a calm and curious voice, and a final reveal of the whole picture.
+
+Invent the *structure* for each subject. Ask what shape the subject really has, and draw that:
+
+- A **process or a journey** (starting a company, a career, how a law is made) becomes a road with stops, forks, swamps, roundabouts and a mountain to climb.
+- A **stack** (the internet, the body, the economy) becomes layers in a cross-section, from the bedrock up.
+- A **taxonomy** (animals, music genres, programming languages) becomes a tree or a river delta.
+- An **ecosystem** (a city's services, a market of players) becomes a town with districts and streets.
+- A **broad field** with peer branches (physics, mathematics) becomes territories on a world map. That is the classic Domain of Science layout. It is one option among many, not the default.
+
+Metaphors earn their place. A swamp, a fog, a fork or a graveyard should *mean* something about the subject (a trap, an unknown, a trade-off, a common failure), and the narration should say what.
+
+Do not reuse an earlier video's layout, region shapes or script lines. Avoid stock phrases such as "can be broken down into N areas" or "so that is the map of X". Each video should feel like its own illustration.
+
 ## Order of work
 
-1. **Understand the field first.** List its main branches (3–5 territories), its foundations (bedrock), its history (origins in the centre), its crossovers and its open questions. Check each fact you will state: dates, names, numbers. Use hedges such as "reportedly" or "is supposed to have said" where the record is disputed.
-2. **Write the script before the layout.** The story decides the map, not the other way round. Follow the script pattern. Keep every term to one plain-language sentence.
-3. **Lay out the map.** Put the origins in the centre. Put territories around it, so that the camera tour moves in short hops. Place each region's items near each other, in the order they are spoken. Leave room for big region titles: in a full-map shot, they must be readable.
-4. **Generate the narration**, then check it. Transcribe the fastest and slowest clips with a speech-to-text model, and compare them to the script to catch dropped or garbled words.
-5. **Review stills before the full render.** The full render takes tens of minutes, so first render stills: the intro, the first region, one dense region, a full overview and the end. Look at each one. Check that labels do not overlap, that titles are readable, that no item sits outside its region, and that the credit line shows.
-6. **Render the full video.** Then sample frames from the final file, and check that the video and audio have the same length.
+1. **Understand the subject first.** List its parts, how they connect, what comes first, what it rests on, where people fail and what is still unknown. Check each fact you will state: dates, names, numbers. Use hedges such as "reportedly" or "is supposed to have said" where the record is disputed.
+2. **Choose the shape.** Decide which picture fits (see above), and sketch where each part goes. Write down why the shape fits the subject.
+3. **Write the script along the shape.** The camera's path through the picture is the order of the story. Keep every term to one plain-language sentence. See `references/script-pattern.md`.
+4. **Lay out the picture.** Place items in the order they are spoken, so the camera moves in short hops. Big titles must stay readable in the full-picture shot.
+5. **Generate the narration**, then check it. Transcribe the fastest and slowest clips with a speech-to-text model, and compare them to the script to catch dropped or garbled words.
+6. **Review stills before the full render.** The full render takes tens of minutes, so first render stills: the intro, the first region, one dense region, a full overview and the end. Look at each one. Check that labels do not overlap, that titles are readable, that no item sits outside its region, and that the credit line shows.
+7. **Render the full video.** Then sample frames from the final file, and check that the video and audio have the same length.
 
 ## Constraints
 

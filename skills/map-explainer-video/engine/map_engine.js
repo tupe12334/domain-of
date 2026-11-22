@@ -4,6 +4,13 @@
  * LAYOUT.credit sets the on-screen credit text (the credit itself is always shown).
  * LAYOUT.intro = {bg, items} sets the cold-open scene: a CSS colour and items in
  * 1920 x 1080 screen coords, same item schema as LAYOUT.items. Missing = empty, teal.
+ * LAYOUT.background = CSS colour behind the regions. Default '#23222b'.
+ * Item type 'path' {id, points:[[x,y],...], closed, width, color, edge, centerDash, drawDur}:
+ *   a smooth road (Catmull-Rom) that draws itself from its cue time over drawDur seconds.
+ *   Paths sit above regions and below every other item.
+ * Item field withRegion: '<regionKey>' pops in at that region's reveal time (+0.08 s per earlier
+ *   item with the same key). withRegion: '*' pops in at the start of the first map segment.
+ *   These items need no SCRIPT cue.
  */
 (function () {
   'use strict';
@@ -37,6 +44,16 @@
   var INTRO_BG_DEFAULT = '#17a2a8';
   var TITLE_PAD_X = 60;
 
+  // World base colour. Matches the page background in map_stage.html.
+  var WORLD_BG_DEFAULT = '#23222b';
+  // Self-drawing roads.
+  var PATH_WIDTH_DEFAULT = 64;
+  var PATH_COLOR_DEFAULT = '#ead9b0';
+  var PATH_EDGE_DEFAULT = '#7d6a4f';
+  var PATH_DRAW_DEFAULT = 4;
+  // withRegion items: seconds between items that share one region.
+  var WITH_REGION_STAGGER = 0.08;
+
   var state = {
     built: false,
     stage: null,
@@ -44,6 +61,7 @@
     introSvg: null,
     regions: [],      // {name, g}
     items: [],        // {id, item, g, x, y}
+    paths: [],        // {id, item, g, len, edge, road, center, dur}
     reveal: {},       // id -> time
     regionStart: {},  // name -> time
     introStart: null, // time the intro crossfade starts
@@ -329,6 +347,65 @@
     list.push({ id: item.id, item: item, g: g, x: item.x, y: item.y });
   }
 
+  /* ---------- self-drawing paths (roads) ---------- */
+
+  function fmtPt(p) { return p[0].toFixed(1) + ' ' + p[1].toFixed(1); }
+
+  // Catmull-Rom through the points, written as cubic Bezier segments. Closed paths wrap around.
+  // Open paths repeat their end points as the outer neighbours.
+  function pathData(points, closed) {
+    var n = points.length;
+    if (n < 2) return '';
+    var P = function (i) {
+      if (closed) return points[((i % n) + n) % n];
+      return points[clamp(i, 0, n - 1)];
+    };
+    var d = 'M' + fmtPt(P(0));
+    var segs = closed ? n : n - 1;
+    for (var i = 0; i < segs; i++) {
+      var p0 = P(i - 1), p1 = P(i), p2 = P(i + 1), p3 = P(i + 2);
+      var c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+      var c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+      d += ' C' + fmtPt(c1) + ' ' + fmtPt(c2) + ' ' + fmtPt(p2);
+    }
+    if (closed) d += 'Z';
+    return d;
+  }
+
+  // Three strokes of one path: edge, road, and an optional dashed white centre line.
+  // The edge and road reveal by dash offset. The centre dash fades in over the same window.
+  function addPath(parent, item, filterId, list) {
+    var g = el('g', { 'data-id': item.id, filter: 'url(#' + filterId + ')' }, parent);
+    var d = pathData(item.points || [], !!item.closed);
+    var width = Number(item.width) > 0 ? Number(item.width) : PATH_WIDTH_DEFAULT;
+    var caps = { fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
+    var edge = el('path', Object.assign({ d: d, stroke: item.edge || PATH_EDGE_DEFAULT,
+      'stroke-width': width + 12 }, caps), g);
+    var road = el('path', Object.assign({ d: d, stroke: item.color || PATH_COLOR_DEFAULT,
+      'stroke-width': width }, caps), g);
+    // Measured while visible: getTotalLength needs the path in the document, not display:none.
+    var len = road.getTotalLength();
+    edge.setAttribute('stroke-dasharray', len + ' ' + len);
+    road.setAttribute('stroke-dasharray', len + ' ' + len);
+    var center = null;
+    var mask = null;
+    if (item.centerDash !== false) {
+      // The centre dash shows only where the road has been drawn, so a mask follows the same reveal.
+      var maskId = 'roadmask-' + list.length;
+      var defs = el('defs', {}, g);
+      var m = el('mask', { id: maskId, maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: WORLD_W, height: WORLD_H }, defs);
+      mask = el('path', { d: d, fill: 'none', stroke: '#ffffff', 'stroke-width': width + 12,
+        'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-dasharray': len + ' ' + len }, m);
+      center = el('path', { d: d, fill: 'none', stroke: '#ffffff', 'stroke-width': 5,
+        'stroke-linecap': 'round', 'stroke-dasharray': '26 22', opacity: 0,
+        mask: 'url(#' + maskId + ')' }, g);
+    }
+    g.setAttribute('display', 'none');
+    var dur = Number(item.drawDur) > 0 ? Number(item.drawDur) : PATH_DRAW_DEFAULT;
+    list.push({ id: item.id, item: item, g: g, len: len, edge: edge, road: road, center: center,
+      mask: mask, dur: dur });
+  }
+
   /* ---------- regions and decoration ---------- */
 
   function addRegion(parent, name, reg) {
@@ -379,17 +456,36 @@
 
   /* ---------- camera ---------- */
 
+  // Bounds of one item for camera framing. A path uses the bounding box of its points.
+  function itemBounds(it) {
+    if (it.type === 'path') {
+      var pts = Array.isArray(it.points) ? it.points : [];
+      if (!pts.length) return null;
+      var px0 = Infinity, py0 = Infinity, px1 = -Infinity, py1 = -Infinity;
+      for (var k = 0; k < pts.length; k++) {
+        px0 = Math.min(px0, pts[k][0]);
+        px1 = Math.max(px1, pts[k][0]);
+        py0 = Math.min(py0, pts[k][1]);
+        py1 = Math.max(py1, pts[k][1]);
+      }
+      return { x0: px0, y0: py0, x1: px1, y1: py1 };
+    }
+    var rx = it.type === 'circle' ? it.r : 220;
+    var ry = it.type === 'circle' ? it.r : 200;
+    return { x0: it.x - rx, y0: it.y - ry, x1: it.x + rx, y1: it.y + ry };
+  }
+
   function frameTarget(ids, byId) {
     var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (var i = 0; i < ids.length; i++) {
       var it = byId[ids[i]];
       if (!it) continue;
-      var rx = it.type === 'circle' ? it.r : 220;
-      var ry = it.type === 'circle' ? it.r : 200;
-      minX = Math.min(minX, it.x - rx);
-      maxX = Math.max(maxX, it.x + rx);
-      minY = Math.min(minY, it.y - ry);
-      maxY = Math.max(maxY, it.y + ry);
+      var b = itemBounds(it);
+      if (!b) continue;
+      minX = Math.min(minX, b.x0);
+      maxX = Math.max(maxX, b.x1);
+      minY = Math.min(minY, b.y0);
+      maxY = Math.max(maxY, b.y1);
     }
     if (minX === Infinity) return null;
     var bw = maxX - minX;
@@ -568,6 +664,38 @@
     el('feDisplacementMap', { in: 'SourceGraphic', in2: 'n', scale: '4', xChannelSelector: 'R', yChannelSelector: 'G' }, f);
   }
 
+  // Reads LAYOUT.background. Missing or blank values fall back to the default base colour.
+  function readBackground(L) {
+    return (L && typeof L.background === 'string' && L.background.trim()) ? L.background.trim() : WORLD_BG_DEFAULT;
+  }
+
+  // Sets reveal times for items with withRegion and no SCRIPT cue.
+  // '<key>': the region's reveal time plus a stagger per earlier item with the same key.
+  // '*': the start of the first map segment.
+  function applyWithRegion(items, scenes, TIM) {
+    var firstMap = null;
+    for (var i = 0; i < scenes.length; i++) {
+      if (scenes[i] === 'map' && TIM.segments[i]) { firstMap = TIM.segments[i].start; break; }
+    }
+    var counts = {};
+    items.forEach(function (item) {
+      if (!item.withRegion || state.reveal[item.id] !== undefined) return;
+      var key = String(item.withRegion);
+      if (key === '*') {
+        if (firstMap !== null) state.reveal[item.id] = firstMap;
+        return;
+      }
+      var rs = state.regionStart[key];
+      if (rs === undefined) {
+        console.warn('map_engine: withRegion "' + key + '" on "' + item.id + '" names no region in SCRIPT');
+        return;
+      }
+      var n = counts[key] || 0;
+      counts[key] = n + 1;
+      state.reveal[item.id] = rs + WITH_REGION_STAGGER * n;
+    });
+  }
+
   // Reads LAYOUT.intro. Missing or partial values fall back to an empty teal intro.
   function readIntro(L) {
     var src = (L && L.intro && typeof L.intro === 'object') ? L.intro : {};
@@ -592,6 +720,7 @@
     state.stage = document.getElementById('stage');
     state.introSvg = document.getElementById('introsvg');
     state.world = el('g', { id: 'world' }, state.stage);
+    el('rect', { x: 0, y: 0, width: WORLD_W, height: WORLD_H, fill: readBackground(L) }, state.world);
     addFilter(state.stage, 'wobble-world');
     addFilter(state.introSvg, 'wobble-intro');
 
@@ -633,10 +762,14 @@
       state.regions.push({ name: name, g: addRegion(regionLayer, name, L.regions[name]) });
     });
 
+    // Roads sit above regions and below every other item.
+    var pathLayer = el('g', { id: 'paths' }, state.world);
     var itemLayer = el('g', { id: 'items' }, state.world);
     (L.items || []).forEach(function (item) {
-      addItem(itemLayer, item, 'wobble-world', state.items);
+      if (item.type === 'path') addPath(pathLayer, item, 'wobble-world', state.paths);
+      else addItem(itemLayer, item, 'wobble-world', state.items);
     });
+    applyWithRegion(L.items || [], scenes, TIM);
 
     // Intro layer: background then items.
     el('rect', { x: 0, y: 0, width: 1920, height: 1080, fill: intro.bg }, state.introSvg);
@@ -702,6 +835,27 @@
       r.g.setAttribute('display', 'inline');
       r.g.setAttribute('opacity', op2.toFixed(3));
       r.g.setAttribute('transform', 'translate(' + r.x + ' ' + r.y + ') scale(' + k.toFixed(4) + ')');
+    });
+
+    // Roads: no pop. The edge and road draw along their length, the centre dash fades in.
+    state.paths.forEach(function (p) {
+      var rv = state.reveal[p.id];
+      if (rv === undefined || t < rv) {
+        p.g.setAttribute('display', 'none');
+        return;
+      }
+      var prog = clamp((t - rv) / p.dur, 0, 1);
+      p.g.setAttribute('display', 'inline');
+      var vis = prog > 0 ? 'visible' : 'hidden';
+      var off = (p.len * (1 - prog)).toFixed(2);
+      p.edge.setAttribute('stroke-dashoffset', off);
+      p.road.setAttribute('stroke-dashoffset', off);
+      p.edge.setAttribute('visibility', vis);
+      p.road.setAttribute('visibility', vis);
+      if (p.center) {
+        p.mask.setAttribute('stroke-dashoffset', off);
+        p.center.setAttribute('opacity', prog.toFixed(3));
+      }
     });
   };
 
