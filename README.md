@@ -1,4 +1,4 @@
-# map-explainer-video
+# domain-of
 
 A Claude Code plugin that makes **"Map of X" explainer videos**. A whole field is taught as one illustrated map: coloured territories, cartoon icons, a camera tour, items that pop in as the narrator names them, and a final reveal of the full map.
 
@@ -13,8 +13,8 @@ This project is an unofficial fan tool. It is not affiliated with or endorsed by
 ## Install
 
 ```text
-/plugin marketplace add tupe12334/map-explainer-video
-/plugin install map-explainer-video@map-explainer-video
+/plugin marketplace add tupe12334/domain-of
+/plugin install domain-of@domain-of
 ```
 
 Then ask Claude, for example: *"make me a map video about economics in the Domain of Science style"*.
