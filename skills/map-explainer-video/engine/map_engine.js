@@ -5,8 +5,9 @@
  * LAYOUT.intro = {bg, items} sets the cold-open scene: a CSS colour and items in
  * 1920 x 1080 screen coords, same item schema as LAYOUT.items. Missing = empty, teal.
  * LAYOUT.background = CSS colour behind the regions. Default '#23222b'.
- * Item type 'path' {id, points:[[x,y],...], closed, width, color, edge, centerDash, drawDur}:
- *   a smooth road (Catmull-Rom) that draws itself from its cue time over drawDur seconds.
+ * Item type 'path' {id, points:[[x,y],...], closed, smooth, width, color, edge, centerDash, drawDur}:
+ *   a road that draws itself from its cue time over drawDur seconds. smooth (default true)
+ *   gives a Catmull-Rom curve; smooth:false gives straight segments between the points.
  *   Paths sit above regions and below every other item.
  * Item field withRegion: '<regionKey>' pops in at that region's reveal time (+0.08 s per earlier
  *   item with the same key). withRegion: '*' pops in at the start of the first map segment.
@@ -351,6 +352,16 @@
 
   function fmtPt(p) { return p[0].toFixed(1) + ' ' + p[1].toFixed(1); }
 
+  // Straight segments through the points. Closed paths end with Z.
+  function linePathData(points, closed) {
+    var n = points.length;
+    if (n < 2) return '';
+    var d = 'M' + fmtPt(points[0]);
+    for (var i = 1; i < n; i++) d += ' L' + fmtPt(points[i]);
+    if (closed) d += 'Z';
+    return d;
+  }
+
   // Catmull-Rom through the points, written as cubic Bezier segments. Closed paths wrap around.
   // Open paths repeat their end points as the outer neighbours.
   function pathData(points, closed) {
@@ -376,7 +387,8 @@
   // The edge and road reveal by dash offset. The centre dash fades in over the same window.
   function addPath(parent, item, filterId, list) {
     var g = el('g', { 'data-id': item.id, filter: 'url(#' + filterId + ')' }, parent);
-    var d = pathData(item.points || [], !!item.closed);
+    var pts = item.points || [];
+    var d = item.smooth === false ? linePathData(pts, !!item.closed) : pathData(pts, !!item.closed);
     var width = Number(item.width) > 0 ? Number(item.width) : PATH_WIDTH_DEFAULT;
     var caps = { fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
     var edge = el('path', Object.assign({ d: d, stroke: item.edge || PATH_EDGE_DEFAULT,
@@ -655,11 +667,14 @@
     return { segments: segs, total: t };
   }
 
-  function addFilter(svg, id) {
+  // Paths pass userSpaceOnUse regions. A straight horizontal or vertical path has a zero-height
+  // bounding box, so an objectBoundingBox filter region would be empty and hide it.
+  function addFilter(svg, id, userSpace) {
     var defs = el('defs', {}, svg);
-    var f = el('filter', {
-      id: id, x: '-20%', y: '-20%', width: '140%', height: '140%', 'color-interpolation-filters': 'sRGB'
-    }, defs);
+    var attrs = userSpace
+      ? { id: id, filterUnits: 'userSpaceOnUse', x: 0, y: 0, width: WORLD_W, height: WORLD_H, 'color-interpolation-filters': 'sRGB' }
+      : { id: id, x: '-20%', y: '-20%', width: '140%', height: '140%', 'color-interpolation-filters': 'sRGB' };
+    var f = el('filter', attrs, defs);
     el('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.035', numOctaves: '2', seed: '7', result: 'n' }, f);
     el('feDisplacementMap', { in: 'SourceGraphic', in2: 'n', scale: '4', xChannelSelector: 'R', yChannelSelector: 'G' }, f);
   }
@@ -722,6 +737,7 @@
     state.world = el('g', { id: 'world' }, state.stage);
     el('rect', { x: 0, y: 0, width: WORLD_W, height: WORLD_H, fill: readBackground(L) }, state.world);
     addFilter(state.stage, 'wobble-world');
+    addFilter(state.stage, 'wobble-paths', true);
     addFilter(state.introSvg, 'wobble-intro');
 
     // Scenes and reveal times.
@@ -766,7 +782,7 @@
     var pathLayer = el('g', { id: 'paths' }, state.world);
     var itemLayer = el('g', { id: 'items' }, state.world);
     (L.items || []).forEach(function (item) {
-      if (item.type === 'path') addPath(pathLayer, item, 'wobble-world', state.paths);
+      if (item.type === 'path') addPath(pathLayer, item, 'wobble-paths', state.paths);
       else addItem(itemLayer, item, 'wobble-world', state.items);
     });
     applyWithRegion(L.items || [], scenes, TIM);
