@@ -49,7 +49,8 @@ Do not reuse an earlier video's layout, region shapes or script lines. Avoid sto
 4. **Lay out the picture.** Place items in the order they are spoken, so the camera moves in short hops. Big titles must stay readable in the full-picture shot.
 5. **Generate the narration**, then check it. Transcribe the fastest and slowest clips with a speech-to-text model, and compare them to the script to catch dropped or garbled words.
 6. **Review stills before the full render.** The full render takes tens of minutes, so first render stills: the intro, the first region, one dense region, a full overview and the end. Look at each one. Check that labels do not overlap, that titles are readable, that no item sits outside its region, and that the credit line shows.
-7. **Render the full video.** Then sample frames from the final file, and check that the video and audio have the same length.
+7. **Render on the machine with free resources.** Rendering screenshots one browser frame at a time, so it is bound by CPU and free memory. Under memory pressure, it slows to a crawl and screenshots time out. Before a full render, check the free memory and power state of every machine you can reach, and run the render where both are good, not where the files happen to be. Move only what the render needs (the project files, the narration and music audio, and the engine), install the engine's dependency there, and bring back only the finished video, checking its checksum. Steps 1–6 stay wherever is convenient.
+8. **Render the full video.** Then sample frames from the final file, and check that the video and audio have the same length.
 
 ## Constraints
 
