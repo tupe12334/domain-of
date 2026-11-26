@@ -41,6 +41,10 @@ The two examples show the idea: the style stays the same, and the structure is i
 - Python 3 with [kokoro-onnx](https://github.com/thewh1teagle/kokoro-onnx) and its v1.0 model files, for narration
 - Optional: `transformers` + `torch` for the MusicGen music bed
 
+## Related projects
+
+- [moadim](https://moadim.io/): loop engineering. Build, schedule and run agent loops.
+
 ## License
 
 MIT for the code. The bundled Patrick Hand SC font is under the SIL Open Font License (see `skills/map-explainer-video/engine/fonts/OFL.txt`).
