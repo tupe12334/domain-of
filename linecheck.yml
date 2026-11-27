@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/tupe12334/linecheck/main/schema/linecheck.schema.json
+
+# Per-file line limits, enforced in CI by .github/workflows/linecheck.yml.
+# Rules are evaluated in order; the first matching rule wins.
+
+rules:
+  # Baseline ceilings for files already over 400 lines on adoption day.
+  # Each ceiling stops the file from growing. Lower it as the file is split.
+  - pattern: "skills/map-explainer-video/engine/map_engine.js"
+    warn: 200
+    error: 900
+  - pattern: "skills/map-explainer-video/icon_library/starter_icons_b.js"
+    warn: 200
+    error: 750
+  - pattern: "skills/map-explainer-video/icon_library/starter_icons_a.js"
+    warn: 200
+    error: 500
+  - pattern: "skills/map-explainer-video/engine/video_renderer.js"
+    warn: 200
+    error: 500
+  - pattern: "examples/bootstrapping-journey/icons_bootstrap_b.js"
+    warn: 200
+    error: 600
+  - pattern: "examples/bootstrapping-journey/icons_bootstrap_a.js"
+    warn: 200
+    error: 450
+
+  # Default limits for all source code.
+  - pattern: "**/*.js"
+    warn: 200
+    warn_message: "Getting long - consider splitting this module"
+    error: 400
+    error_message: "Too large to review easily; split this file before merging"
+  - pattern: "**/*.py"
+    warn: 200
+    warn_message: "Getting long - consider splitting this module"
+    error: 400
+    error_message: "Too large to review easily; split this file before merging"
+
+exclude:
+  - "node_modules/**"
+  - "**/*.json"
+  - "**/*.md"
+  - "**/*.png"
+  - "**/*.ttf"
